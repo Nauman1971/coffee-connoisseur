@@ -1,12 +1,14 @@
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
-import coffeStoreData from '../../data/coffee-stores.json';
 import Head from 'next/head';
 import cls from 'classnames';
 
 import styles from "../../styles/coffee-store.module.css";
 import { fetchCoffeeStores } from '../../lib/coffee-stores';
+import { useContext, useEffect, useState } from 'react';
+import { StoreContext } from '../../store/store-context';
+import { isEmpty } from '../../utils';
 
 // Server side
 export async function getStaticProps({ params }) {
@@ -18,7 +20,7 @@ export async function getStaticProps({ params }) {
 
     return {
         props: {
-            coffeStore: findCoffeeStoreById ? findCoffeeStoreById : {},
+            coffeeStore: findCoffeeStoreById ? findCoffeeStoreById : {},
         }
     }
 }
@@ -39,14 +41,32 @@ export async function getStaticPaths() {
 }
 
 // Client Side
-const CoffeStore = ({ coffeStore }) => {
+const CoffeeStore = (initialProps) => {
     const router = useRouter();
-    const { name, imgUrl, address, id, neighborhood } = coffeStore;
+    const id = router.query.id;
+    const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore)
+    const { state: { coffeeStores } } = useContext(StoreContext);
+
     const handleUpvoteButton = () => console.log("up vote button")
+
+    useEffect(() => {
+        if (isEmpty(initialProps.coffeeStore)) {
+            if (coffeeStores.length > 0) {
+                const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
+                    return coffeeStore.id.toString() === id;
+                }
+                )
+                setCoffeeStore(findCoffeeStoreById);
+            }
+        }
+    }, [id]);
 
     if (router.isFallback) {
         return <h2>Loading...</h2>
     }
+
+    const { name, imgUrl, address, neighborhood } = coffeeStore;
+
     return (
         <div className={styles.layout}>
             <Head><title>{name}</title></Head>
@@ -59,7 +79,10 @@ const CoffeStore = ({ coffeStore }) => {
                         <p className={styles.name}>{name}</p>
                     </div>
                     <Image
-                        src={imgUrl}
+                        src={
+                            imgUrl ||
+                            "https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
+                        }
                         alt={name}
                         width={600}
                         height={360}
@@ -90,4 +113,4 @@ const CoffeStore = ({ coffeStore }) => {
     )
 }
 
-export default CoffeStore;
+export default CoffeeStore;
