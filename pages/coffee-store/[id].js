@@ -47,19 +47,61 @@ const CoffeeStore = (initialProps) => {
     const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore)
     const { state: { coffeeStores } } = useContext(StoreContext);
 
-    const handleUpvoteButton = () => console.log("up vote button")
+    const handleCreateCoffeeStore = async (coffeeStore) => {
+        try {
+            const {
+                id,
+                name,
+                voting,
+                imgUrl,
+                neighbourhood,
+                address
+            } = coffeeStore;
+
+            const response = await fetch('/api/createCoffeeStore', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    id,
+                    name,
+                    voting: 0,
+                    imgUrl,
+                    neighbourhood: neighbourhood || "",
+                    address: address || "",
+                })
+            });
+            const dbCoffeeStore = await response.json();
+            console.log({ dbCoffeeStore });
+        } catch (err) {
+            console.error("Error creating coffee store", err)
+        }
+    }
+
+    const [votingCount, setVotingCount] = useState(1);
+
+    const handleUpvoteButton = () => {
+        let count = votingCount + 1;
+        setVotingCount(count);
+    }
 
     useEffect(() => {
         if (isEmpty(initialProps.coffeeStore)) {
             if (coffeeStores.length > 0) {
-                const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
+                const coffeeStoreFromContext = coffeeStores.find((coffeeStore) => {
                     return coffeeStore.id.toString() === id;
+                })
+                if (coffeeStoreFromContext) {
+                    setCoffeeStore(coffeeStoreFromContext);
+                    handleCreateCoffeeStore(coffeeStoreFromContext);
                 }
-                )
-                setCoffeeStore(findCoffeeStoreById);
             }
+        } else {
+            // SSG
+            handleCreateCoffeeStore(initialProps.coffeStore);
         }
-    }, [id]);
+    }, [id, initialProps, initialProps.coffeStore]);
 
     if (router.isFallback) {
         return <h2>Loading...</h2>
@@ -101,7 +143,7 @@ const CoffeeStore = (initialProps) => {
                         </div>}
                     <div className={styles.iconWrapper}>
                         <Image src="/static/icons/star.svg" width="24" height="24" />
-                        <p className={styles.text}>1</p>
+                        <p className={styles.text}>{votingCount}</p>
                     </div>
                     <button
                         className={styles.upvoteButton}
