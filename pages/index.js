@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import Head from 'next/head'
 import Image from 'next/image';
 import Banner from '../components/banner'
@@ -7,6 +8,7 @@ import { fetchCoffeeStores } from '../lib/coffee-stores';
 import useTrackLocation from '../hooks/use-track-location';
 import { useContext, useEffect, useState } from 'react';
 import { ActionTypes, StoreContext } from '../store/store-context';
+
 export async function getStaticProps(context) {
   const coffeeStores = await fetchCoffeeStores();
   return {
@@ -26,31 +28,26 @@ export default function Home(props) {
 
   // console.log({ latLong, locationErrorMsg });
   const handleOnBannerBtnClick = () => {
-    console.log('hi');
     handleTrackLocation();
   }
 
-  useEffect(() => {
-    async function fetchData() {
-      if (latLong) {
-        try {
-          const response = await fetch(`/api/getCoffeeStoresByLocation?latLong=${latLong}&limit=30`);
-          const coffeeStores = await response.json()
+  useEffect(async () => {
+    if (latLong) {
+      try {
+        const response = await fetch(`/api/getCoffeeStoresByLocation?latLong=${latLong}&limit=30`);
+        const coffeeStores = await response.json()
 
-          dispatch({
-            type: ActionTypes.SET_COFFEE_STORES,
-            payload: {
-              coffeeStores,
-            }
-          });
-          setCoffeeStoresError("");
-        } catch (err) {
-          console.error({ err });
-          setCoffeeStoresError(err)
-        }
+        dispatch({
+          type: ActionTypes.SET_COFFEE_STORES,
+          payload: {
+            coffeeStores,
+          }
+        });
+        setCoffeeStoresError("");
+      } catch (err) {
+        setCoffeeStoresError(err)
       }
     }
-    fetchData();
   }, [latLong])
   return (
     <div className={styles.container}>

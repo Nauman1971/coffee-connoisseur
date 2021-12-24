@@ -2,7 +2,9 @@ import { table, getMinifiedRecords, findRecordByFilter } from '../../lib/airtabl
 
 const createCoffeeStore = async (req, res) => {
     if (req.method === "POST") {
+
         const { id, name, neighbourhood, address, imgUrl, voting } = req.body;
+
         try {
             if (id) {
                 const records = await findRecordByFilter(id);
